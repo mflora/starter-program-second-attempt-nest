@@ -36,16 +36,13 @@ export class AuthService {
     let decodedToken;
     try {
       const slicedToken = token.slice(7);
-      console.log(slicedToken);
       decodedToken = this.jwtService.decode(slicedToken);
       const username = decodedToken.username;
       const user = await this.usersService.findOne(decodedToken.username);
       if (!user) {
         return HttpStatus.BAD_REQUEST;
       }
-      console.log("ADSSDASDASDASDASD");
-      console.log(user);
-      console.log("ADSSDASDASDASDASD");
+
       return {
         username: user.username,
       }
