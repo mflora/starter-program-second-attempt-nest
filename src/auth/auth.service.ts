@@ -53,14 +53,15 @@ export class AuthService {
 
   async deleteUser(token: string) {
     let decodedToken;
+    const slicedToken = token.slice(7);
     try {
-      this.jwtService.verify(token);
+      this.jwtService.verify(slicedToken);
     } catch (e) {
         throw new UnauthorizedException("You have no right to do this");
-      }
+    }
 
     try {
-      decodedToken = this.jwtService.decode(token);
+      decodedToken = this.jwtService.decode(slicedToken);
       this.usersService.deleteUser(decodedToken.username);
     } catch (e) {
       throw new BadRequestException("There is no such user");
