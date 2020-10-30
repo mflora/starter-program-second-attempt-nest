@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { User, UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -25,7 +25,7 @@ export class AuthService {
   async register(username: string, password: string): Promise<HttpStatus> {
     const user = await this.usersService.findOne(username);
     if (user) {
-      return HttpStatus.BAD_REQUEST;
+      throw new BadRequestException("Username already exist.");
     }
     this.usersService.addUser({userId: Math.floor(Math.random() * 100), username: username, password: password})
     return HttpStatus.CREATED;
@@ -36,37 +36,35 @@ export class AuthService {
     let decodedToken;
     try {
       const slicedToken = token.slice(7);
-      console.log(slicedToken);
       decodedToken = this.jwtService.decode(slicedToken);
       const username = decodedToken.username;
       const user = await this.usersService.findOne(decodedToken.username);
       if (!user) {
-        return HttpStatus.BAD_REQUEST;
+        throw new BadRequestException("There is no such user");
       }
-      console.log("ADSSDASDASDASDASD");
-      console.log(user);
-      console.log("ADSSDASDASDASDASD");
+
       return {
         username: user.username,
       }
     } catch (e) {
-      return HttpStatus.BAD_REQUEST;
+      throw new BadRequestException("There is no such user");
     }
   }
 
   async deleteUser(token: string) {
     let decodedToken;
+    const slicedToken = token.slice(7);
     try {
-      this.jwtService.verify(token);
+      this.jwtService.verify(slicedToken);
     } catch (e) {
-      return HttpStatus.UNAUTHORIZED;
+        throw new UnauthorizedException("You have no right to do this");
     }
 
     try {
-      decodedToken = this.jwtService.decode(token);
+      decodedToken = this.jwtService.decode(slicedToken);
       this.usersService.deleteUser(decodedToken.username);
     } catch (e) {
-      return HttpStatus.BAD_REQUEST
+      throw new BadRequestException("There is no such user");
     }
 
     return HttpStatus.OK;
@@ -77,7 +75,7 @@ export class AuthService {
     const user:User = await this.usersService.findOne(username);
 
     if(!user || user.password !== body.password) {
-      return HttpStatus.BAD_REQUEST;
+      throw new BadRequestException("Invalid password");
     }
 
     this.usersService.changePassword(username, body.newPassword);
